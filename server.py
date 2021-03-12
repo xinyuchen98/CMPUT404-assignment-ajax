@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-# Copyright 2013 Abram Hindle
+# Copyright 2021 Xinyu Chen
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,27 +74,31 @@ def flask_post_json():
 @app.route("/")
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    return flask.redirect('/static/index.html', code=302)
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    data = flask_post_json()
+    for key, value in data.iteritems():
+        myWorld.update(entity, key, value)
+    return json.dumps(myWorld.get(entity))
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    return json.dumps(myWorld.world())
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return json.dumps(myWorld.get(entity))
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return json.dumps(myWorld.world())
 
 if __name__ == "__main__":
     app.run()

@@ -6,7 +6,7 @@
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
-        Copyright 2013 Abram Hindle
+        Copyright 2021 Xinyu Chen
         
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
                 if (xhr.status==200) {
                     //XXX: parse some JSON from the request!
                     //XXX: Pass the data to the callback!
+                    callback(JSON.parse(xhr.responseText));
                 }
             } 
             catch(e) {
@@ -50,6 +51,10 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
     //XXX: POST to a URL
     //XXX: set the mimetype and the accept headers!
     // Remember to use application/json !
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify(objects));
 }
 
 
@@ -65,7 +70,8 @@ function drawCircle(context,entity) {
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
+        arc(x, y, (entity["radius"])?entity["radius"]:30, 0, 2.0 * Math.PI, false);  
+	fill();
         stroke();                                
     }
 }
@@ -75,7 +81,7 @@ function prepEntity(entity) {
         entity["colour"] = "#FF0000";
     }
     if (!entity["radius"]) {
-        entity["radius"] = 50;
+        entity["radius"] = 30;
     }
     return entity;
 }
@@ -137,8 +143,9 @@ function getPosition(e) {
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just  modified!
-
+    //XXX: Send a XHTML Request that updates the entity you just modified!
+    var url = window.location.origin + "/entity/" + encodeURIComponent(entity); 
+    sendJSONXMLHTTPRequest(url, data, null)
 }
 
 var counter = 0;
@@ -251,18 +258,23 @@ mouse.mousedowners.push(function(x,y,clicked,e) {
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'grey'});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
+    addEntityWithoutName({'x':x,'y':y,'colour':'cyan',
                           'radius':10});
 });
 
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    drawFrame();
+    var url = window.location.host + "/world"
+    sendJSONXMLHTTPRequest(url, null, function(data){
+        world = data;
+        drawNextFrame();
+    }); 
+    drawFrame(); 
 }
 
 // 30 frames per second
